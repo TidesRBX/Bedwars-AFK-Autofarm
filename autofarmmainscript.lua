@@ -682,7 +682,78 @@ end)
             end
         end)
     
-
+        local Players = game:GetService("Players")
+        local TeleportService = game:GetService("TeleportService")
+        local HttpService = game:GetService("HttpService")
+        
+        local player = Players.LocalPlayer
+        local webh = "https://discord.com/api/webhooks/1360487901418487918/3Dt5Ft4ce7oz40BPbqBw6X2UC-juUj-Hz7QcjIHyq9RgDb56c65N9VddEINnA2d-E7_5"  -- Replace with your actual webhook URL
+        
+        -- Webhook Message Function
+        local function sendSpectatorWebhook()
+            local data = {
+                ['embeds'] = {
+                    {
+                        ['title'] = 'You are in the spectators team, match has ended for you ✅',
+                        ['description'] = 'Lobbying match has ended ✅',
+                        ['color'] = 65280, -- Green
+                        ['footer'] = {
+                            ['text'] = 'Made by The Pro\'s :)'
+                        }
+                    }
+                }
+            }
+        
+            local payload = HttpService:JSONEncode(data)
+        
+            local success, response = pcall(function()
+                if syn and syn.request then
+                    return syn.request({
+                        Url = webh,
+                        Method = 'POST',
+                        Headers = {['Content-Type'] = 'application/json'},
+                        Body = payload
+                    })
+                elseif request then
+                    return request({
+                        Url = webh,
+                        Method = 'POST',
+                        Headers = {['Content-Type'] = 'application/json'},
+                        Body = payload
+                    })
+                elseif http_request then
+                    return http_request({
+                        Url = webh,
+                        Method = 'POST',
+                        Headers = {['Content-Type'] = 'application/json'},
+                        Body = payload
+                    })
+                end
+            end)
+        
+            if success then
+                print("Webhook sent successfully!")
+            else
+                warn("Failed to send webhook:", response)
+            end
+        end
+        
+        -- Check Team and Act
+        local function checkTeam()
+            if player.Team and player.Team.Name == "Spectators" then
+                sendSpectatorWebhook()
+                task.wait(5)  -- Give time for the webhook to send
+                TeleportService:Teleport(6872265039, player)
+            end
+        end
+        
+        -- Initial check
+        checkTeam()
+        
+        -- Listen for team changes
+        player:GetPropertyChangedSignal("Team"):Connect(checkTeam)
+        
+    
 else
     print("Unknown place!")
 end
